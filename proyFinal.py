@@ -28,7 +28,15 @@ def eulerAdelante():
     grafica()
 
 def eulerAtras():
-    print("Euler Atras")
+    ajustarParametros()
+    global arrST
+    global arrET
+    global arrIT
+    global arrRT
+    global arrPT
+    arrST,arrET,arrIT,arrRT,arrPT = ecuaciones.eulerBackward(0.01,float(inicial.get()),float(final.get()))
+    grafica()
+
 
 def eulerModificado():
     print("Euler Modificado")
