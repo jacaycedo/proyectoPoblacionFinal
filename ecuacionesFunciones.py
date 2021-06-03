@@ -1,6 +1,7 @@
 ##
 import numpy as np
 from scipy.optimize import fsolve
+from scipy.integrate import odeint
 # PARAMETROS
 class Ecuaciones:
     def __init__(self, k, ai, ae, gamma, b, p, m):
@@ -29,22 +30,37 @@ class Ecuaciones:
     def setm(self,m):
         self.m = m
 
-    #definición de las ecuaciones diferenciales
+    '''========================================================================================================================================================
+
+                                                                    ECUACIONES DIFERENCIALES
+
+    ========================================================================================================================================================'''
+    #Ecuacion que modela S
     def ds (self, s, e, i, r):
         return -(self.ae *s*e) - (self.ai*s*i) + (self.gamma*r)
 
+    #Ecuacion que modela E
     def de(self,s, e, i):
         return (self.ae*s*e) + (self.ai*s*i) - (self.k*e) - (self.p*e)
 
+    #Ecuacion que modela I
     def di(self,e ,i):
         return (self.k*e) - (self.b*i) - (self.m*i)
 
+    #Ecuacion que modela R
     def dr(self,i,e,r):
         return (self.b*i) + (self.p*e) -(self.gamma*r)
 
+    #Ecuacion que modela P
     def dp(self,i) :
         return self.m * i
 
+    '''========================================================================================================================================================
+
+                                                                    FUNCIONES DE APOYO PARA METODOS
+
+    ========================================================================================================================================================'''
+    #Funcion de apoyo euler hacia atras
     def eulerBackSupport(self, ec, s1, e1, i1, r1, p1):
         h=0.01
         return [ s1 - ec[0] + h * self.ds(ec[0], ec[1], ec[2], ec[3]),
@@ -53,6 +69,22 @@ class Ecuaciones:
                  r1 - ec[3] + h * self.dr(ec[2], ec[1], ec[3]),
                  p1 - ec[4] + h * self.dp(ec[2])]
 
+    #Funcion de apoyo euler modificado
+    def eulerModSupport(self, ec, s1, e1, i1, r1, p1, h):
+        return [s1 + (h/2.0) * (self.ds(s1,e1,i1,r1) + self.ds(ec[0], ec[1], ec[2], ec[3])) - ec[0],
+                e1 + (h/2.0) * (self.de(s1,e1,i1) + self.de(ec[0],ec[1],ec[2])) - ec[1],
+                i1 + (h/2.0) * (self.di(e1,i1) + self.di(ec[1], ec[2])) - ec[2],
+                r1 + (h/2.0) * (self.dr(i1,e1,r1) + self.dr(ec[2],ec[1],ec[3])) - ec[3],
+                p1 + (h/2.0) * (self.dp(i1) + self.dp(ec[2])) - ec[4]]
+
+
+    '''========================================================================================================================================================
+
+                                                                    METODOS DE RESOLUCION
+
+    ========================================================================================================================================================'''
+
+    #Euler hacia atras
     def eulerBackward(self, h, t0, t1):
         T = np.arange(t0, t1, h)
         SEulerB = np.zeros(len(T))
@@ -76,34 +108,8 @@ class Ecuaciones:
             PEulerB[iter] = Sol[4]
         return SEulerB, EEulerB, IEulerB, REulerB, PEulerB
 
-        """
-        SEulerB[iter] = SEulerB[0] - SEulerB[iter - 1] + h * self.ds(SEulerB[iter - 1], EEulerB[iter - 1], IEulerB[iter - 1], REulerB[iter - 1])
-        EEulerB[iter] = EEulerB[0] - EEulerB[iter - 1] + h * self.de(SEulerB[iter - 1], EEulerB[iter - 1], IEulerB[iter - 1])
-        IEulerB[iter] = IEulerB[0] - IEulerB[iter - 1] + h * self.di(EEulerB[iter - 1], IEulerB[iter - 1])
-        REulerB[iter] = REulerB[0] - REulerB[iter - 1] + h * self.dr(IEulerB[iter - 1], EEulerB[iter - 1], REulerB[iter - 1])
-        PEulerB[iter] = PEulerB[0] - PEulerB[iter - 1] + h * self.dp(IEulerB[iter - 1])
-        
-                return [s1 - ec[0] + (h / 2) * (self.ds(ec[0], ec[1], ec[2], ec[3]) + self.ds(ec[st], ec[et], ec[it], ec[rt])),
-                e1 - ec[1] + (h / 2) * (self.de(ec[0], ec[1], ec[2]) + self.de(ec[st], ec[et], ec[it])),
-                i1 - ec[2] + (h / 2) * (self.di(ec[1], ec[2]) + self.di(ec[et], ec[it])),
-                r1 - ec[3] + (h / 2) * (self.dr(ec[2], ec[1], ec[3]) + self.dr(ec[it], ec[et], ec[rt])),
-                p1 - ec[4] + (h / 2) * (self.dp(ec[2]) + self.dp(ec[it]))]
-                
-                      SEulerM[iter] = Sol[0] + Sol2[0]
-            EEulerM[iter] = Sol[1] + Sol2[1]
-            IEulerM[iter] = Sol[2] + Sol2[2]
-            REulerM[iter] = Sol[3] + Sol2[3]
-            PEulerM[iter] = Sol[4] + Sol2[4]
-        """
 
-    def eulerModSupport(self, ec, s1, e1, i1, r1, p1, h):
-        return [s1 + (h/2.0) * (self.ds(s1,e1,i1,r1) + self.ds(ec[0], ec[1], ec[2], ec[3])) - ec[0],
-                e1 + (h/2.0) * (self.de(s1,e1,i1) + self.de(ec[0],ec[1],ec[2])) - ec[1],
-                i1 + (h/2.0) * (self.di(e1,i1) + self.di(ec[1], ec[2])) - ec[2],
-                r1 + (h/2.0) * (self.dr(i1,e1,r1) + self.dr(ec[2],ec[1],ec[3])) - ec[3],
-                p1 + (h/2.0) * (self.dp(i1) + self.dp(ec[2])) - ec[4]]
-
-
+    #Euler hacia adelante
     def eulerMod(self, h, t0, t1):
         T = np.arange(t0, t1, h)
         SEulerM = np.zeros(len(T))
@@ -134,6 +140,7 @@ class Ecuaciones:
 
         return SEulerM, EEulerM, IEulerM, REulerM, PEulerM
 
+    #Euler hacia adelante
     def eulerForward(self, h, t0, t1):
         T = np.arange(t0, t1, h)
         SEulerFor = np.zeros(len(T))
@@ -160,6 +167,8 @@ class Ecuaciones:
         
         return SEulerFor,EEulerFor,IEulerFor,REulerFor,PEulerFor
 
+
+    #Runge Kutta 2
     def RK2(self, h, t0, t1):
         T = np.arange(t0, t1, h)
         SRK2 = np.zeros(len(T))
@@ -198,6 +207,7 @@ class Ecuaciones:
 
         return SRK2, ERK2, IRK2, RRK2, PRK2
     
+    #Runge Kutta 4
     def RK4(self, h, t0, t1):
         T = np.arange(t0, t1, h)
         SRK4 = np.zeros(len(T))
@@ -249,3 +259,16 @@ class Ecuaciones:
         
         return SRK4, ERK4, IRK4, RRK4, PRK4
 
+    def scypi(self, h, t0, t1):
+        T = np.arange(t0, t1, h)
+
+        def scypiAux(X,t):
+            dy = np.zeros((5,))
+            dy[0] = self.ds(X[0],X[1],X[2],X[3])
+            dy[1] = self.de(X[0],X[1],X[2])
+            dy[2] = self.di(X[1],X[2])
+            dy[3] = self.dr(X[2],X[1],X[3])
+            dy[4] = self.dp(X[2])
+            return dy
+
+        return odeint(scypiAux,[0.99,0,0.1,0,0],T)

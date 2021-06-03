@@ -14,7 +14,8 @@ from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg)
 from numpy.core.fromnumeric import var
 import ecuacionesFunciones as functions
 
-#Definicion de arreglos con valores para graficar
+
+#Definicion de arreglos con valores de cada funcion para graficar a lo largo del tiempo
 global arrST
 global arrET
 global arrIT
@@ -80,6 +81,17 @@ def RK4():
     arrST,arrET,arrIT,arrRT,arrPT = ecuaciones.RK4(0.01,float(inicial.get()),float(final.get()))
     grafica()
 
+def odeint():
+    global arrST
+    global arrET
+    global arrIT
+    global arrRT
+    global arrPT
+    variables = ecuaciones.scypi(0.01,float(inicial.get()),float(final.get()))
+    arrST,arrET,arrIT,arrRT,arrPT = variables[:,0], variables[:,1],variables[:,2],variables[:,3],variables[:,4]
+    grafica()
+    
+
 
 def ajustarParametros():
     ecuaciones.setk(float(valorK.get()))
@@ -126,14 +138,8 @@ def grafica():
     Plot = FigureCanvasTkAgg(fig, master=window)
     Plot.draw()
 
-    #toolbar = NavigationToolbar2Tk(Plot, window)
-    #toolbar.update()
     Plot.get_tk_widget().place(x=50,y=30)
 
-    #def on_key_press(event):
-    #    print("you pressed {}".format(event.key))
-    #    key_press_handler(event, Plot, toolbar)
-    #Plot.mpl_connect("key_press_event", on_key_press)
 
 
 
@@ -222,7 +228,7 @@ btnRunge2.grid(row = 3, column = 0, pady = 10)
 btnRunge4 = tk.Button(btnColumn, text="Runge-Kutta 4", width=25, height=1, bg='black', fg='white', command= RK4)
 btnRunge4.grid(row = 4, column = 0, pady = 10)
 #Boton nativos python
-btnRunge4 = tk.Button(btnColumn, text="Odeint", width=25, height=1, bg='black', fg='white', command= RK4)
+btnRunge4 = tk.Button(btnColumn, text="Odeint", width=25, height=1, bg='black', fg='white', command= odeint)
 btnRunge4.grid(row = 5, column = 0, pady = 10)
 
 #Boton cerrar
