@@ -1,20 +1,32 @@
 import tkinter as tk
+from time import time
+import datetime as dt
 from tkinter.constants import COMMAND
 from typing import Collection
 import matplotlib.pyplot as plt
 import numpy as np
 from tkinter import Variable, ttk
 from tkinter import messagebox
+from tkinter import filedialog
+from pathlib import Path
+import struct as st
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg)
 from numpy.core.fromnumeric import var
 import ecuacionesFunciones as functions
 
 #Definicion de arreglos con valores para graficar
+global arrST
+global arrET
+global arrIT
+global arrRT
+global arrPT
+global tiempo
 arrST = []
 arrET =[]
 arrIT =[]
 arrRT =[]
 arrPT =[]
+tiempo =[]
 
 #Definicion de funciones Solucion de ecuaciones
 def eulerAdelante():
@@ -78,6 +90,7 @@ def ajustarParametros():
     ecuaciones.setp(float(valorRho.get()))
     ecuaciones.setm(float(valorMiu.get())) 
 
+
 #Funcion para cerrar ventana
 def CerrarAplicacion():
     MsgBox = tk.messagebox.askquestion ('Cerrar Aplicación','¿Está seguro que desea cerrar la aplicación?', icon = 'warning')
@@ -95,7 +108,8 @@ def grafica():
     ax.set_xlabel("days")
     ax.set_ylabel("Population Ratio")
     ax.plot() 
-
+    global tiempo
+    tiempo = t
     if sT.get() :
         ax.plot(t,arrST, label='S(t)')
     if eT.get():
@@ -131,6 +145,7 @@ window = tk.Tk()
 window.geometry('900x700')
 window.title('Proyecto final cientifica')
 window.config(background="#fff")
+
 
 #Variables para parametros
 valorK = tk.StringVar(value = 0.05)
@@ -258,5 +273,66 @@ entradaFin = tk.Entry(master=frameSimulacion, textvariable =final, highlightback
 dias = tk.Label(master = frameSimulacion, font=(20), text = "Dias", bg='#fff').grid(row=0, column=4)
 botonActivar = tk.Button(master = frameSimulacion, font=(20), textvariable=resta, command = botonDias).grid(row=0, column=5)
 frameSimulacion.place(x=110, y = 550)       
+
+
+def cargarDatos():
+    nombreCarpeta = tk.filedialog.askdirectory(parent = window, title='Directorio para leer datos')
+    if nombreCarpeta == '':
+        messagebox.showinfo(message="No has seleccionado una carpeta", title="Advertencia")
+    carpetaReal = Path(nombreCarpeta)
+    datosSt = leerArchivoDir(carpetaReal, '.s')
+    datosEt = leerArchivoDir(carpetaReal, '.e')
+    datosIt = leerArchivoDir(carpetaReal, '.i')
+    datosRt = leerArchivoDir(carpetaReal, '.r')
+    datoPt = leerArchivoDir(carpetaReal, '.p')
+    datosT = leerArchivoDir(carpetaReal, '.t')
+    global arrST
+    global arrET
+    global arrIT
+    global arrRT
+    global arrPT
+    global tiempo
+    arrST = datosSt
+    arrET = datosEt
+    arrIT = datosIt
+    arrRT = datosRt
+    arrPT = datoPt
+    final.set(datosT[-1]+0.01)
+    inicial.set(datosT[0])
+    grafica()
+
+def leerArchivoDir(directorio, tipo):
+    exte = '*'+tipo
+    archivo = [f.absolute() for f in directorio.glob(exte) if f.is_file()][0]
+    datosLeidos = open(archivo, 'rb').read()
+    unpacked = np.array(st.unpack('d'*(len(datosLeidos)//8),datosLeidos))
+    return unpacked
+
+def persistirDatos():
+    tiempoActual = time()
+    fecha = dt.datetime.utcfromtimestamp(tiempoActual).strftime("%Y-%m-%d_%H-%M-%S")
+    carpeta = 'DatosDe-'+ fecha
+    directorioNombre = filedialog.askdirectory(parent = window,title="Directorio de guardado de datos") 
+    if directorioNombre == '':
+        messagebox.showinfo(message="No has seleccionado una carpeta", title="Advertencia")
+    rutaCarpeta = Path(directorioNombre)
+    carpetaReal = rutaCarpeta.joinpath(str(carpeta))
+    carpetaReal.mkdir(parents=True, exist_ok=True)
+    guardarArchivo(carpetaReal,'.s', np.array(arrST))
+    guardarArchivo(carpetaReal,'.e', np.array(arrET))
+    guardarArchivo(carpetaReal,'.i', np.array(arrIT))
+    guardarArchivo(carpetaReal,'.r', np.array(arrRT))
+    guardarArchivo(carpetaReal,'.p', np.array(arrPT))
+    guardarArchivo(carpetaReal,'.t', np.array(tiempo))
+
+def guardarArchivo(directorio, ext, datos):
+    datosPacked = st.pack('d'*len(datos), *datos)
+    archivo = open(directorio.joinpath("datos"+ext).absolute(),'wb')
+    archivo.write(datosPacked)
+
+btnEulerMod = tk.Button(window, text="Importar", width=15, height=1, bg='white', fg='black', command=cargarDatos).place(x=80, y= 0)
+btnEulerMod = tk.Button(window, text="Exportar", width=15, height=1, bg='white', fg='black', command=persistirDatos).place(x=200, y= 0)
+
+
 
 window.mainloop()    
