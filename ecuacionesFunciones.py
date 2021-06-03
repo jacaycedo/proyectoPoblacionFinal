@@ -96,13 +96,13 @@ class Ecuaciones:
             PEulerM[iter] = Sol[4] + Sol2[4]
         """
 
-    def eulerModSupport(self, ec, s1, e1, i1, r1, p1):
-        h = 0.01
-        return [s1 - ec[0] + int(h/2) * (self.ds(ec[0], ec[1], ec[2], ec[3]) + self.ds(s1, e1, i1, r1)),
-                e1 - ec[1] + int(h/2) * (self.de(ec[0], ec[1], ec[2]) + self.de(s1, e1, i1)),
-                i1 - ec[2] + int(h/2) * (self.di(ec[1], ec[2]) + self.di(e1, i1)),
-                r1 - ec[3] + int(h/2) * (self.dr(ec[2], ec[1], ec[3]) + self.dr(i1, e1, r1)),
-                p1 - ec[4] + int(h/2) * (self.dp(ec[2]) + self.dp(i1))]
+    def eulerModSupport(self, ec, s1, e1, i1, r1, p1, h):
+        return [s1 + (h/2.0) * (self.ds(s1,e1,i1,r1) + self.ds(ec[0], ec[1], ec[2], ec[3])) - ec[0],
+                e1 + (h/2.0) * (self.de(s1,e1,i1) + self.de(ec[0],ec[1],ec[2])) - ec[1],
+                i1 + (h/2.0) * (self.di(e1,i1) + self.di(ec[1], ec[2])) - ec[2],
+                r1 + (h/2.0) * (self.dr(i1,e1,r1) + self.dr(ec[2],ec[1],ec[3])) - ec[3],
+                p1 + (h/2.0) * (self.dp(i1) + self.dp(ec[2])) - ec[4]]
+
 
     def eulerMod(self, h, t0, t1):
         T = np.arange(t0, t1, h)
@@ -117,11 +117,15 @@ class Ecuaciones:
         REulerM[0] = 0
         PEulerM[0] = 0
         for iter in range(1, len(T)):
-            Sol = fsolve(self.eulerModSupport, np.array( [SEulerM[iter - 1], EEulerM[iter - 1], IEulerM[iter - 1], REulerM[iter - 1], PEulerM[iter - 1]]),
-                         (SEulerM[iter - 1], EEulerM[iter - 1], IEulerM[iter - 1], REulerM[iter - 1], PEulerM[iter - 1]))
-            ##Sol2 = fsolve(self.eulerModSupport, np.array( [SEulerM[iter], EEulerM[iter], IEulerM[iter], REulerM[iter], PEulerM[iter]]),
-                         ##(SEulerM[iter], EEulerM[iter], IEulerM[iter], REulerM[iter], PEulerM[iter]))
-
+            Sol = fsolve(self.eulerModSupport, np.array([
+                                                          SEulerM[iter - 1], 
+                                                          EEulerM[iter - 1],
+                                                          IEulerM[iter - 1],
+                                                          REulerM[iter - 1], 
+                                                          PEulerM[iter - 1]
+                                                        ]),
+                         (SEulerM[iter - 1], EEulerM[iter - 1], IEulerM[iter - 1], REulerM[iter - 1], PEulerM[iter - 1], h))
+                         
             SEulerM[iter] = Sol[0]
             EEulerM[iter] = Sol[1]
             IEulerM[iter] = Sol[2]
@@ -129,9 +133,6 @@ class Ecuaciones:
             PEulerM[iter] = Sol[4]
 
         return SEulerM, EEulerM, IEulerM, REulerM, PEulerM
-
-
-
 
     def eulerForward(self, h, t0, t1):
         T = np.arange(t0, t1, h)
