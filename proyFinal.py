@@ -30,6 +30,7 @@ arrPT =[]
 tiempo =[]
 
 #Definicion de funciones Solucion de ecuaciones
+#cada metodo lama a su respectivo metodo en ecuacionesFunciones.py y ejecuta el metodo graficar
 def eulerAdelante():
     ajustarParametros()
     global arrST
@@ -92,7 +93,7 @@ def odeint():
     grafica()
     
 
-
+#coloca los parametros obtenidos de la interfaz en las variables de ecuacionesFunciones.py
 def ajustarParametros():
     ecuaciones.setk(float(valorK.get()))
     ecuaciones.setai(float(valorAlphai.get()))
@@ -112,7 +113,7 @@ def CerrarAplicacion():
         tk.messagebox.showinfo('Retornar','Será retornado a la aplicación')
         
 
-
+#funcion que se encarga de graficar cada uno de los resultados
 def grafica():
     fig = plt.Figure(figsize=(5, 4), dpi=100)
     t = np.arange(float(inicial.get()),float(final.get()), 0.01)

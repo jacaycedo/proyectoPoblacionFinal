@@ -61,6 +61,8 @@ class Ecuaciones:
 
     ========================================================================================================================================================'''
     #Funcion de apoyo euler hacia atras
+    #recibe las variables a resolver (ec) y los valores iniciales de cada una como parametros (s1, e1, i1, r1, p1)
+    #retorna las ecuaciones euler back igualadas a 0 con cada parametro
     def eulerBackSupport(self, ec, s1, e1, i1, r1, p1):
         h=0.01
         return [ s1 - ec[0] + h * self.ds(ec[0], ec[1], ec[2], ec[3]),
@@ -70,6 +72,8 @@ class Ecuaciones:
                  p1 - ec[4] + h * self.dp(ec[2])]
 
     #Funcion de apoyo euler modificado
+    #recibe las variables a resolver (ec) y los valores iniciales de cada una como parametros (s1, e1, i1, r1, p1)
+    #retorna las ecuaciones euler mod igualadas a 0 con cada parametro
     def eulerModSupport(self, ec, s1, e1, i1, r1, p1, h):
         return [s1 + (h/2.0) * (self.ds(s1,e1,i1,r1) + self.ds(ec[0], ec[1], ec[2], ec[3])) - ec[0],
                 e1 + (h/2.0) * (self.de(s1,e1,i1) + self.de(ec[0],ec[1],ec[2])) - ec[1],
@@ -85,6 +89,10 @@ class Ecuaciones:
     ========================================================================================================================================================'''
 
     #Euler hacia atras
+    #se crea un arreglo de ceros por cada variable para guardar sus valores
+    #Se resuelven las ecuaciones auxiliares con fsolve
+    #se retorna cada una de las variables como respuesta de fsolve
+    #params h (salto), t0 y t1 (tiempos)
     def eulerBackward(self, h, t0, t1):
         T = np.arange(t0, t1, h)
         SEulerB = np.zeros(len(T))
@@ -109,7 +117,11 @@ class Ecuaciones:
         return SEulerB, EEulerB, IEulerB, REulerB, PEulerB
 
 
-    #Euler hacia adelante
+    #Euler modificado
+    #se crea un arreglo de ceros por cada variable para guardar sus valores
+    #Se resuelven las ecuaciones auxiliares con fsolve
+    #se retorna cada una de las variables como respuesta de fsolve
+    #params h (salto), t0 y t1 (tiempos)
     def eulerMod(self, h, t0, t1):
         T = np.arange(t0, t1, h)
         SEulerM = np.zeros(len(T))
@@ -141,6 +153,9 @@ class Ecuaciones:
         return SEulerM, EEulerM, IEulerM, REulerM, PEulerM
 
     #Euler hacia adelante
+    #se crea un arreglo de ceros por cada variable para guardar sus valores
+    # params h (salto), t0 y t1 (tiempos)
+    #resuelve la ecuacion de euler forward para cada una de las variables
     def eulerForward(self, h, t0, t1):
         T = np.arange(t0, t1, h)
         SEulerFor = np.zeros(len(T))
@@ -169,6 +184,10 @@ class Ecuaciones:
 
 
     #Runge Kutta 2
+    #se crea un arreglo de ceros por cada variable para guardar sus valores
+    # params h (salto), t0 y t1 (tiempos)
+    #Calcula cada una de las K del metodo
+    #las utiliza para llegar a la solución
     def RK2(self, h, t0, t1):
         T = np.arange(t0, t1, h)
         SRK2 = np.zeros(len(T))
@@ -208,6 +227,10 @@ class Ecuaciones:
         return SRK2, ERK2, IRK2, RRK2, PRK2
     
     #Runge Kutta 4
+    #se crea un arreglo de ceros por cada variable para guardar sus valores
+    # params h (salto), t0 y t1 (tiempos)
+    #Calcula cada una de las K del metodo
+    #las utiliza para llegar a la solución
     def RK4(self, h, t0, t1):
         T = np.arange(t0, t1, h)
         SRK4 = np.zeros(len(T))
