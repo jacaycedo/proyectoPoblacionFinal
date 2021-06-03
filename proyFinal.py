@@ -39,7 +39,14 @@ def eulerAtras():
 
 
 def eulerModificado():
-    print("Euler Modificado")
+    ajustarParametros()
+    global arrST
+    global arrET
+    global arrIT
+    global arrRT
+    global arrPT
+    arrST, arrET, arrIT, arrRT, arrPT = ecuaciones.eulerMod(0.01, float(inicial.get()), float(final.get()))
+    grafica()
 
 def RK2():
     ajustarParametros()
